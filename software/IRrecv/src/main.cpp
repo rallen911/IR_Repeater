@@ -10,8 +10,9 @@
 #include <IRutils.h>
 
 // Include Libraries for ESP-NOW Communications
-#include <esp_now.h>
-#include <WiFi.h>
+#include <ESP8266WiFi.h>
+#include <espnow.h>
+//#include <WiFi.h>
 #include "messages.h"
 #include "callbacks.h"
 
@@ -90,7 +91,7 @@ IRrecv irrecv(kRecvPin, kCaptureBufferSize, kTimeout, true);
 // MAC Address of responder - edit as required
 uint8_t broadcastAddress[] = 
 {
-  0xC8, 0x2E, 0x18, 0xED, 0xED, 0x50
+  0x18, 0xFE, 0x34, 0xD9, 0x41, 0x7C
 };
 
 // Create a structured object for received data
@@ -100,7 +101,7 @@ struct_message_rcv rcvData;
 struct_message_xmit xmitData;
 
 // ESP-NOW Peer info
-esp_now_peer_info_t peerInfo;
+//esp_now_peer_info_t peerInfo;
 
 // Variable for connection error  - true is error state
 static volatile bool wifiConnectError = true;
@@ -136,28 +137,34 @@ void setup()
     WiFi.setSleep(false);
 
     // Initilize ESP-NOW
-    if( esp_now_init() != ESP_OK )
+    if( esp_now_init() != 0 )
     {
+        Serial.println("Error initializing ESP-NOW");
         wifiConnectError = true;
     }
     else
     {
+        Serial.println("Initialized ESP-NOW");
         wifiConnectError = false;
     }
 
+    // Once ESPNow is successfully Init, we will register for Send CB to
+    // get the status of Trasnmitted packet
+    esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
+
     // Register receive callback function
-    esp_now_register_recv_cb(OnDataRecv);
+    //esp_now_register_recv_cb(OnDataRecv);
 
     // Register the send callback
-    esp_now_register_send_cb(OnDataSent);
+    esp_now_register_send_cb( OnDataSent );
 
     // Register peer
-    memcpy(peerInfo.peer_addr, broadcastAddress, 6);
-    peerInfo.channel = 0;
-    peerInfo.encrypt = false;
+    //memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+    //peerInfo.channel = 0;
+    //peerInfo.encrypt = false;
 
     // Add peer
-    if( esp_now_add_peer(&peerInfo) != ESP_OK )
+    if( esp_now_add_peer( broadcastAddress, ESP_NOW_ROLE_SLAVE, 0, NULL, 0 ) != 0 )
     {
         Serial.println("No peer added");
         wifiConnectError = true;
@@ -169,10 +176,14 @@ void setup()
         wifiConnectError = false;
     }
     
-    callbacksInit( &rcvData, sizeof(rcvData), &wifiConnectError );
+    if( esp_now_is_peer_exist( broadcastAddress ))
+    {
+        Serial.println("Peer exists");
+    }
+    else
+        Serial.println("No exists");
 
-    // Enter the Loop with connectError set HIGH to avoid intial display flicker
-    wifiConnectError = false;
+    callbacksInit( &rcvData, sizeof(rcvData), &wifiConnectError );
 }
 
 // The repeating section of the code
@@ -197,7 +208,7 @@ void loop()
         // send IR data via WiFi to IRsend
         // Send message via ESP-NOW
         xmitData.msg_type = MSG_IR;
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *)&xmitData, sizeof(xmitData));
+        int result = esp_now_send(broadcastAddress, (uint8_t *)&xmitData, sizeof(xmitData));
 
         // Resume capturing IR messages. It was not restarted until after we sent
         // the message so we didn't capture our own message.

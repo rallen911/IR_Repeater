@@ -7,7 +7,7 @@
   https://dronebotworkshop.com
 */
 #include <Arduino.h>
-#include <esp_now.h>
+#include <espnow.h>
 #include "messages.h"
 #include "callbacks.h"
 
@@ -29,9 +29,9 @@ void callbacksInit( struct_message_rcv *ptr, size_t size, volatile bool *connect
 }
 
 // Callback function called when data is sent
-void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status )
+void OnDataSent( uint8_t *mac_addr, uint8_t status )
 {
-    if( status == ESP_NOW_SEND_SUCCESS )
+    if( status == 0 )
     {
         *wifiConnectError = false;
         Serial.println("Message sent successfully!");
@@ -42,15 +42,15 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status )
         Serial.println("Message send error!");
     }
 
-  // Pass connetion status and error data to main program
-  //updateConnectionStatus( connectStatus, connectError );
-
+    return;
 }
 
 // Callback function executed when data is received
-void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
+void OnDataRecv( uint8_t *mac, uint8_t *incomingData, uint8_t len )
 {
     // Get receievd data
     memcpy(rcvData_p, incomingData, rcvDataSize );
     rcvData_p->newMessage = true;
+
+    return;
 }

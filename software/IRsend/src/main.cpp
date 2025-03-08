@@ -10,15 +10,15 @@
 #include <IRutils.h>
 
 // Include Libraries for ESP-NOW Communications
-#include <esp_now.h>
-#include <WiFi.h>
+#include <ESP8266WiFi.h>
+#include <espnow.h>
 #include "messages.h"
 #include "callbacks.h"
 
 // ==================== start of TUNEABLE PARAMETERS ====================
 
-// GPIO to use to control the IR LED circuit. Recommended: 19.
-const uint16_t kIrLedPin = 19;
+// GPIO to use to control the IR LED circuit. Recommended: 14.
+const uint16_t kIrLedPin = 14;
 
 // The Serial connection baud rate.
 // NOTE: Make sure you set your Serial Monitor to the same speed.
@@ -54,14 +54,14 @@ IRsend irsend(kIrLedPin);
 // MAC Address of responder - edit as required
 uint8_t broadcastAddress[] = 
 {
-  0x08, 0xB6, 0x1F, 0xB8, 0x17, 0x10
+  0x50, 0x02, 0x91, 0xEC, 0x18, 0xC5
 };
 
 // Create a structured object for received data
 struct_message_rcv rcvData;
 
 // ESP-NOW Peer info
-esp_now_peer_info_t peerInfo;
+//esp_now_peer_info_t peerInfo;
 
 // Variable for connection error  - true is error state
 static volatile bool wifiConnectError = true;
@@ -85,7 +85,7 @@ void setup()
     Serial.println();
 
     // Read the local MAC address and print it out.
-    Serial.print("IRrecv MAC Address: ");
+    Serial.print("IRsend MAC Address: ");
     Serial.println( WiFi.macAddress());
 
     // Set ESP32 as a Wi-Fi Station
@@ -95,7 +95,7 @@ void setup()
     WiFi.setSleep(false);
 
     // Initilize ESP-NOW
-    if (esp_now_init() != ESP_OK)
+    if (esp_now_init() != 0)
     {
         connectStatus = "ESP-NOW Error";
         wifiConnectError = true;
@@ -114,12 +114,12 @@ void setup()
     esp_now_register_send_cb(OnDataSent);
 
     // Register peer
-    memcpy(peerInfo.peer_addr, broadcastAddress, 6);
-    peerInfo.channel = 0;
-    peerInfo.encrypt = false;
+    // memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+    // peerInfo.channel = 0;
+    // peerInfo.encrypt = false;
 
     // Add peer
-    if (esp_now_add_peer(&peerInfo) != ESP_OK)
+    if( esp_now_add_peer( broadcastAddress, ESP_NOW_ROLE_SLAVE, 0, NULL, 0 ) != 0 )
     {
         Serial.println("No peer added");
         wifiConnectError = true;
