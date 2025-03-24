@@ -15,10 +15,14 @@
 #include "messages.h"
 #include "callbacks.h"
 
+#define HEARTBEAT_1_SEC     1000    // Sync up with IRrecv once every second
+
 // ==================== start of TUNEABLE PARAMETERS ====================
 
 // GPIO to use to control the IR LED circuit. Recommended: 14.
 const uint16_t kIrLedPin = 14;
+
+uint8_t statusLedPin = 0;
 
 // The Serial connection baud rate.
 // NOTE: Make sure you set your Serial Monitor to the same speed.
@@ -60,6 +64,9 @@ uint8_t broadcastAddress[] =
 // Create a structured object for received data
 struct_message_rcv rcvData;
 
+// Create a structured object for sent data
+struct_message_xmit xmitData;
+
 // ESP-NOW Peer info
 //esp_now_peer_info_t peerInfo;
 
@@ -75,6 +82,9 @@ String connectStatus = "NO INFO";
 // This section of code runs only once at start-up.
 void setup()
 {
+    pinMode(statusLedPin, OUTPUT);      // Set status LED pin as an OUTPUT
+    digitalWrite(statusLedPin, LOW);    // Turn light off
+
     irsend.begin();       // Start up the IR sender.
 
     Serial.begin(kBaudRate, SERIAL_8N1);
@@ -97,26 +107,29 @@ void setup()
     // Initilize ESP-NOW
     if (esp_now_init() != 0)
     {
-        connectStatus = "ESP-NOW Error";
+        Serial.println("Error initializing ESP-NOW");
         wifiConnectError = true;
         return;
     }
     else
     {
-        connectStatus = "ESP-NOW OK";
+        Serial.println("Initialized ESP-NOW");
         wifiConnectError = false;
     }
+
+    // Set role to combo
+    esp_now_set_self_role( ESP_NOW_ROLE_COMBO );
 
     // Register receive callback function
     esp_now_register_recv_cb(OnDataRecv);
 
     // Register the send callback
-    esp_now_register_send_cb(OnDataSent);
+    esp_now_register_send_cb( OnDataSent );
 
     // Register peer
-    // memcpy(peerInfo.peer_addr, broadcastAddress, 6);
-    // peerInfo.channel = 0;
-    // peerInfo.encrypt = false;
+    //memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+    //peerInfo.channel = 0;
+    //peerInfo.encrypt = false;
 
     // Add peer
     if( esp_now_add_peer( broadcastAddress, ESP_NOW_ROLE_SLAVE, 0, NULL, 0 ) != 0 )
@@ -145,22 +158,43 @@ void loop()
     static uint32_t last_time = 0;
     uint32_t now;
     static uint32_t heartbeatTime = 0;
+    static uint32_t heartbeatRate = HEARTBEAT_1_SEC;
+    static uint8_t failCount = 0;
 
     static uint8_t pinState = LOW;
     
     now = millis();     // get current time
     heartbeatTime += now - last_time;
-    last_time = now;    // save for next loop    
+    last_time = now;    // save for next loop
+
+    // Send a message every second to montior whether IRrecv peer is present
+    if( heartbeatTime > heartbeatRate )
+    {
+        heartbeatTime = 0;
+
+        xmitData.msg_type = MSG_HEARTBEAT;
+        xmitData.msg_data = 0xAA;
+        int result = esp_now_send(broadcastAddress, (uint8_t *)&xmitData, sizeof(xmitData));
+
+        if( wifiConnectError == true )
+        {
+            ++ failCount;
+
+            if( failCount > 10 )
+                pinState = LOW;
+        }
+        else
+        {
+            failCount = 0;
+            pinState = HIGH;
+        }
+        
+        digitalWrite( statusLedPin, pinState );
+    }
 
     // Check connection status
     if( rcvData.newMessage == true )
     {
-        if( pinState == LOW )
-            pinState = HIGH;
-        else
-            pinState = LOW;
-        
-        digitalWrite( kIrLedPin, pinState );
         rcvData.newMessage = false;
 
         decode_type_t protocol = rcvData.IRmessage_data.decode_type;

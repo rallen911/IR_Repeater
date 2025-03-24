@@ -14,3 +14,10 @@ typedef struct struct_message_rcv
     MESSAGE_TYPE_E msg_type;
     decode_results IRmessage_data;
 } struct_message_rcv;
+
+// Create a structured object for sent data
+typedef struct struct_message_xmit
+{
+    MESSAGE_TYPE_E msg_type;
+    uint8_t msg_data;
+} struct_message_xmit;

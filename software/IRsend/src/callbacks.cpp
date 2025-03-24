@@ -34,12 +34,10 @@ void OnDataSent( uint8_t *mac_addr, uint8_t status )
     if( status == 0 )
     {
         *wifiConnectError = false;
-        Serial.println("Message sent successfully!");
     }
     else
     {
         *wifiConnectError = true;
-        Serial.println("Message send error!");
     }
 
     return;
@@ -50,7 +48,15 @@ void OnDataRecv( uint8_t *mac, uint8_t *incomingData, uint8_t len )
 {
     // Get receievd data
     memcpy(rcvData_p, incomingData, rcvDataSize );
-    rcvData_p->newMessage = true;
+    
+    if( rcvData_p->msg_type == MSG_IR )
+    {
+        rcvData_p->newMessage = true;
+    }
+    else
+    {
+        rcvData_p->newMessage = false;
+    }
 
     return;
 }

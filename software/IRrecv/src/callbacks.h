@@ -10,4 +10,4 @@
 
 void callbacksInit( struct_message_rcv *, size_t, volatile bool * );
 void OnDataSent( uint8_t *, uint8_t status );
-// void OnDataRecv( const uint8_t *mac, const uint8_t *incomingData, int len );
+void OnDataRecv( uint8_t *mac, uint8_t *incomingData, uint8_t len );
