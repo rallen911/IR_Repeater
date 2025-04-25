@@ -221,7 +221,7 @@ void loop()
         {
             ++ failCount;
 
-            if( failCount > 10 )
+            if( failCount > 5 )
                 pinState = LOW;
         }
         else
