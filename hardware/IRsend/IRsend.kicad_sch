@@ -1074,13 +1074,13 @@
 	)
 	(wire
 		(pts
-			(xy 50.8 63.5) (xy 64.77 63.5)
+			(xy 59.69 68.58) (xy 64.77 68.58)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "357edc4d-91da-45b5-8240-6f2191231d6d")
+		(uuid "170d6b60-8e9b-4b8e-9f5f-d6b6e9a7c9c9")
 	)
 	(wire
 		(pts
@@ -1121,6 +1121,16 @@
 			(type default)
 		)
 		(uuid "68b838b5-3f65-43ab-9cfe-a298a2f509dd")
+	)
+	(wire
+		(pts
+			(xy 50.8 63.5) (xy 64.77 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "69471932-beb9-4ed2-b46e-ff50ec1807af")
 	)
 	(wire
 		(pts
@@ -1201,16 +1211,6 @@
 			(type default)
 		)
 		(uuid "eea9ada6-03be-471f-8131-ddb9aeb58f02")
-	)
-	(wire
-		(pts
-			(xy 59.69 68.58) (xy 64.77 68.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f1a3f094-8439-4e44-b20e-d255a5aa02ce")
 	)
 	(symbol
 		(lib_id "Device:LED")
@@ -1403,7 +1403,8 @@
 	)
 	(symbol
 		(lib_id "Connector:Conn_01x03_Pin")
-		(at 69.85 66.04 180)
+		(at 69.85 66.04 0)
+		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -1411,7 +1412,7 @@
 		(dnp no)
 		(uuid "4a50990a-d611-4bf4-94be-1d281c7509f0")
 		(property "Reference" "J1"
-			(at 66.04 56.642 0)
+			(at 66.04 75.438 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1420,7 +1421,7 @@
 			)
 		)
 		(property "Value" "Conn_01x03_Pin"
-			(at 66.04 59.182 0)
+			(at 66.04 72.898 0)
 			(effects
 				(font
 					(size 1.27 1.27)
